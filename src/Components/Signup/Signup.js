@@ -1,35 +1,97 @@
-import React, { useState,useContext } from 'react';
+import React,{useContext, useState, useEffect} from 'react';
 import Logo from '../../olx-logo.png';
-import { useHistory } from 'react-router-dom';
 import { FirebaseContext } from '../../store/Context';
+import {useHistory} from 'react-router-dom'
 import './Signup.css';
 
 export default function Signup() {
-  const history=useHistory()
-  const [username,setUsername]=useState('')
-  const [email,setEmail]=useState('')
-  const [phone,setPhone]=useState('')
-  const [password,setPassword]=useState('')
-  const {firebase}=useContext(FirebaseContext)
+  const history = useHistory()
+  const [username,setUsername] = useState('')
+  const [email,setEmail] = useState('')
+  const [phone,setPhone] = useState('')
+  const [password,setPassword] = useState('')
+  const [formErrors,setFormErrors] = useState({})
+  const [isSubmit,setIsSubmit] = useState(false)
+  const {firebase} = useContext(FirebaseContext)
 
-  const handleSubmit=(e)=>{
+  const singnUpData ={
+    username,
+    email,
+    phone,
+    password
+  }
+
+  const handleSubmit =(e)=>{
     e.preventDefault()
+    console.log(singnUpData,'signupdata');
+    // setFormErrors(validateForm(singnUpData));
+    let error = validateForm(singnUpData)
+    setFormErrors(error)
+    setIsSubmit(true)
+    console.log(Object.keys(error),'pppppp');
+    console.log(isSubmit,'yyyyyy');
+    if(Object.keys(error).length== 0){
+      console.log('reached in');
     firebase.auth().createUserWithEmailAndPassword(email,password).then((result)=>{
       result.user.updateProfile({displayName:username}).then(()=>{
         firebase.firestore().collection('users').add({
           id:result.user.uid,
           username:username,
           phone:phone
-        }).then(()=>{
-          history.push('/login')
-        })
-
       })
+      }).then(()=>{
+        history.push('/login')
+      })
+    }).catch((err)=>{
+      error.email = err.message;
+      setFormErrors(error)
+      console.log(err.message);
+      console.log(error);
     })
-
   }
+}
 
+  useEffect(()=>{
 
+    if(Object.keys(formErrors).length === 0 && isSubmit){
+      console.log(FormData);
+    }
+  },[formErrors])
+
+  const validateForm=(values)=>{
+
+    const errors ={};
+    const regex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+    const userRegex = /^[A-Za-z0-9_-]{3,15}$/
+
+    if(!values.username){
+      errors.username = "Username is required"
+    }else if(!userRegex.test(values.username)){
+      errors.username= 'Enter a valid username'
+    }
+
+    if(!values.email){
+      errors.email = "email is required"
+    }else if(!regex.test(values.email)){
+      errors.email='Enter a valid email'
+    }
+
+    if(!values.phone){
+      errors.phone = "phone is required"
+    }else if(values.phone.length != 10){
+      errors.phone = "phone must be 10 digits"
+    }
+    if(!values.password){
+      errors.password = "password is required"
+    }else if(values.password.length <6){
+      errors.password ='Password must be more than 6 characters'
+    }else if(values.password.length >10){
+      errors.password ='Password cannot exceed more than 10 characters'
+    }
+
+    return errors;
+    
+  }
 
   return (
     <div>
@@ -47,47 +109,57 @@ export default function Signup() {
             name="name"
             defaultValue="John"
           />
-          <br />
+          
+          <p className='error'>{formErrors.username}</p>
+         
           <label htmlFor="fname">Email</label>
           <br />
           <input
             className="input"
             type="email"
-            id="fname"
             value={email}
             onChange={(e)=>setEmail(e.target.value)}
+            id="fname"
             name="email"
-            defaultValue="John"
+            defaultValue="John@gmail.com"
+            
           />
-          <br />
+          
+          <p className='error'>{formErrors.email}</p>
+          
           <label htmlFor="lname">Phone</label>
           <br />
           <input
             className="input"
             type="number"
-            id="lname"
             value={phone}
             onChange={(e)=>setPhone(e.target.value)}
+            id="lname"
             name="phone"
-            defaultValue="Doe"
+            defaultValue="98514252"
+            
           />
-          <br />
+          
+          <p className='error'>{formErrors.phone}</p>
+        
           <label htmlFor="lname">Password</label>
           <br />
           <input
             className="input"
             type="password"
-            id="lname"
             value={password}
             onChange={(e)=>setPassword(e.target.value)}
+            id="lname"
             name="password"
             defaultValue="Doe"
+           
           />
-          <br />
-          <br />
+          
+          <p className='error'>{formErrors.password}</p>
+          
           <button>Signup</button>
         </form>
-        <a>Login</a>
+        <a href='/login'>Login</a>
       </div>
     </div>
   );

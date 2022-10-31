@@ -44,6 +44,7 @@ function Header() {
          
         </div>
         {user && <span onClick={()=>{
+          alert('Are you sure want to logout')
           firebase.auth().signOut()
           history.push('/login')
         }}>Logout</span>}
