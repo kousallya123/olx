@@ -66,8 +66,6 @@ export default function Signup() {
 
     if(!values.username){
       errors.username = "Username is required"
-    }else if(!userRegex.test(values.username)){
-      errors.username= 'Enter a valid username'
     }
 
     if(!values.email){
